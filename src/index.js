@@ -58,31 +58,29 @@ const getVisibleTodos = (todos, visibilityFilter) => {
   }
 }
 
-// Presentational Component
-const AddTodo = ({ onClick }) => {
-  let input
-  return (
-    <div>
-      <input
-        ref={node => {
-          input = node
-        }}
-      />
+// Combined Component
+const AddTodo = () => (
+  <div>
+    <input
+      ref={node => {
+        this.input = node
+      }}
+    />
 
-      <button
-        onClick={() => {
-          onClick(input.value)
-          input.value = ''
-        }}
-      >
-        +
-      </button>
-    </div>
-  )
-}
-AddTodo.propTypes = {
-  onClick: PropTypes.func.isRequired
-}
+    <button
+      onClick={() => {
+        store.dispatch({
+          type: 'ADD_TODO',
+          id: store.getState().todos.length,
+          text: this.input.value
+        })
+        this.input.value = ''
+      }}
+    >
+      +
+    </button>
+  </div>
+)
 
 // Presentational Component
 const Todo = ({ text, isCompleted, onClick }) => (
@@ -111,9 +109,30 @@ TodoList.propTypes = {
   onTodoClick: PropTypes.func.isRequired
 }
 
+// Container Component
+class VisibleTodoList extends React.Component {
+  componentDidMount() {
+    this.unsubscribe = store.subscribe(() => this.forceUpdate())
+  }
+  componentWillUnmount() {
+    this.unsubscribe()
+  }
+
+  render() {
+    const state = store.getState()
+
+    return (
+      <TodoList
+        todos={getVisibleTodos(state.todos, state.visibilityFilter)}
+        onTodoClick={id => store.dispatch({ type: 'TOGGLE_TODO', id })}
+      />
+    )
+  }
+}
+
 // Presentational Component
-const FilterLink = ({ filter, children, currentFilter, onClick }) => {
-  if (filter === currentFilter) {
+const Link = ({ active, onClick, children }) => {
+  if (active) {
     return <span>{children}</span>
   }
   return (
@@ -121,86 +140,54 @@ const FilterLink = ({ filter, children, currentFilter, onClick }) => {
       href="/"
       onClick={e => {
         e.preventDefault()
-        onClick(filter)
+        onClick()
       }}
     >
       {children}
     </a>
   )
 }
-FilterLink.propTypes = {
-  filter: PropTypes.string.isRequired,
+Link.propTypes = {
+  active: PropTypes.bool.isRequired,
   children: PropTypes.string.isRequired,
-  currentFilter: PropTypes.string.isRequired,
   onClick: PropTypes.func.isRequired
 }
 
+// Container Component
+class FilterLink extends React.Component {
+  componentDidMount() {
+    this.unsubscribe = store.subscribe(() => this.forceUpdate())
+  }
+  componentWillUnmount() {
+    this.unsubscribe()
+  }
+
+  render() {
+    const state = store.getState()
+    const props = this.props
+    return (
+      <Link active={props.filter === state.visibilityFilter} onClick={() => store.dispatch({ type: props.filter })}>
+        {props.children}
+      </Link>
+    )
+  }
+}
+
 // Presentational Component
-const Footer = ({ visibilityFilter, onFilterClick }) => (
+const Footer = () => (
   <p>
-    Show:{' '}
-    <FilterLink
-      filter="SHOW_ALL"
-      currentFilter={visibilityFilter}
-      onClick={onFilterClick}
-    >
-      all
-    </FilterLink>{' '}
-    <FilterLink
-      filter="SHOW_ACTIVE"
-      currentFilter={visibilityFilter}
-      onClick={onFilterClick}
-    >
-      active
-    </FilterLink>{' '}
-    <FilterLink
-      filter="SHOW_COMPLETED"
-      currentFilter={visibilityFilter}
-      onClick={onFilterClick}
-    >
-      completed
-    </FilterLink>
+    Show: <FilterLink filter="SHOW_ALL">all</FilterLink> <FilterLink filter="SHOW_ACTIVE">active</FilterLink>{' '}
+    <FilterLink filter="SHOW_COMPLETED">completed</FilterLink>
   </p>
 )
-Footer.propTypes = {
-  visibilityFilter: PropTypes.string.isRequired,
-  onFilterClick: PropTypes.func.isRequired
-}
 
-// Single Container Component
-const TodoApp = ({ todos, visibilityFilter }) => (
+// Presentational Component
+const TodoApp = () => (
   <div>
-    <AddTodo
-      onClick={text =>
-        store.dispatch({
-          type: 'ADD_TODO',
-          id: todos.length,
-          /* id: todos.length > 0 ? todos[todos.length - 1].id + 1 : 0, */
-          text
-        })
-      }
-    />
-    <TodoList
-      todos={getVisibleTodos(todos, visibilityFilter)}
-      onTodoClick={id => store.dispatch({ type: 'TOGGLE_TODO', id })}
-    />
-    <Footer visibilityFilter={visibilityFilter} onFilterClick={filter => store.dispatch({ type: filter })} />
+    <AddTodo />
+    <VisibleTodoList />
+    <Footer />
   </div>
 )
-TodoApp.propTypes = {
-  todos: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      text: PropTypes.string.isRequired,
-      isCompleted: PropTypes.bool.isRequired
-    }).isRequired
-  ).isRequired,
-  visibilityFilter: PropTypes.string.isRequired
-}
 
-const render = () => {
-  ReactDOM.render(<TodoApp {...store.getState()} />, document.getElementById('root'))
-}
-
-render()
-store.subscribe(render)
+ReactDOM.render(<TodoApp />, document.getElementById('root'))
