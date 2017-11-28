@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { createStore, combineReducers } from 'redux'
 import PropTypes from 'prop-types'
+import { Provider, connect } from 'react-redux'
 
 // single todo reducer
 const todo = (state, action) => {
@@ -43,7 +44,19 @@ const visibilityFilter = (state = 'SHOW_ALL', action) => {
 }
 
 const reducer = combineReducers({ todos, visibilityFilter })
-const store = createStore(reducer)
+
+// action creators---------------------------------------------------------------
+const addTodo = (text, id) => ({
+  type: 'ADD_TODO',
+  id,
+  text
+})
+
+const setVisibilityFilter = filter => ({ type: filter })
+
+const toggleTodo = id => ({ type: 'TOGGLE_TODO', id })
+
+// -------------------------------------------------------------------------------
 
 const getVisibleTodos = (todos, visibilityFilter) => {
   switch (visibilityFilter) {
@@ -59,28 +72,33 @@ const getVisibleTodos = (todos, visibilityFilter) => {
 }
 
 // Combined Component
-const AddTodo = () => (
-  <div>
-    <input
-      ref={node => {
-        this.input = node
-      }}
-    />
+let AddTodo = ({ id, dispatch }) => {
+  let input
+  return (
+    <div>
+      <input
+        ref={node => {
+          input = node
+        }}
+      />
 
-    <button
-      onClick={() => {
-        store.dispatch({
-          type: 'ADD_TODO',
-          id: store.getState().todos.length,
-          text: this.input.value
-        })
-        this.input.value = ''
-      }}
-    >
-      +
-    </button>
-  </div>
-)
+      <button
+        onClick={() => {
+          dispatch(addTodo(input.value, id))
+          input.value = ''
+        }}
+      >
+        +
+      </button>
+    </div>
+  )
+}
+AddTodo.propTypes = {
+  id: PropTypes.number.isRequired,
+  dispatch: PropTypes.func.isRequired
+}
+
+AddTodo = connect(state => ({ id: state.todos.length }), null)(AddTodo)
 
 // Presentational Component
 const Todo = ({ text, isCompleted, onClick }) => (
@@ -109,26 +127,17 @@ TodoList.propTypes = {
   onTodoClick: PropTypes.func.isRequired
 }
 
-// Container Component
-class VisibleTodoList extends React.Component {
-  componentDidMount() {
-    this.unsubscribe = store.subscribe(() => this.forceUpdate())
-  }
-  componentWillUnmount() {
-    this.unsubscribe()
-  }
+const mapStateToTodoListProps = state => ({
+  todos: getVisibleTodos(state.todos, state.visibilityFilter)
+})
 
-  render() {
-    const state = store.getState()
-
-    return (
-      <TodoList
-        todos={getVisibleTodos(state.todos, state.visibilityFilter)}
-        onTodoClick={id => store.dispatch({ type: 'TOGGLE_TODO', id })}
-      />
-    )
+const mapDispatchToTodoListProps = dispatch => ({
+  onTodoClick: id => {
+    dispatch(toggleTodo(id))
   }
-}
+})
+
+const VisibleTodoList = connect(mapStateToTodoListProps, mapDispatchToTodoListProps)(TodoList)
 
 // Presentational Component
 const Link = ({ active, onClick, children }) => {
@@ -153,25 +162,15 @@ Link.propTypes = {
   onClick: PropTypes.func.isRequired
 }
 
-// Container Component
-class FilterLink extends React.Component {
-  componentDidMount() {
-    this.unsubscribe = store.subscribe(() => this.forceUpdate())
+const mapStateToFilterLinkProps = (state, ownProps) => ({
+  active: ownProps.filter === state.visibilityFilter
+})
+const mapDispatchToFilterLinkProps = (dispatch, ownProps) => ({
+  onClick: () => {
+    dispatch(setVisibilityFilter(ownProps.filter))
   }
-  componentWillUnmount() {
-    this.unsubscribe()
-  }
-
-  render() {
-    const state = store.getState()
-    const props = this.props
-    return (
-      <Link active={props.filter === state.visibilityFilter} onClick={() => store.dispatch({ type: props.filter })}>
-        {props.children}
-      </Link>
-    )
-  }
-}
+})
+const FilterLink = connect(mapStateToFilterLinkProps, mapDispatchToFilterLinkProps)(Link)
 
 // Presentational Component
 const Footer = () => (
@@ -190,4 +189,9 @@ const TodoApp = () => (
   </div>
 )
 
-ReactDOM.render(<TodoApp />, document.getElementById('root'))
+ReactDOM.render(
+  <Provider store={createStore(reducer)}>
+    <TodoApp />
+  </Provider>,
+  document.getElementById('root')
+)
