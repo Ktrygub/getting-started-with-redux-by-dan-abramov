@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 
 import addTodo from '../redux/actionCreators/addTodo'
 
-const AddTodo = ({ id, dispatch }) => {
+const AddTodo = ({ dispatch }) => {
   let input
   return (
     <div>
@@ -16,7 +16,7 @@ const AddTodo = ({ id, dispatch }) => {
 
       <button
         onClick={() => {
-          dispatch(addTodo(input.value, id))
+          dispatch(addTodo(input.value))
           input.value = ''
         }}
       >
@@ -26,8 +26,7 @@ const AddTodo = ({ id, dispatch }) => {
   )
 }
 AddTodo.propTypes = {
-  id: PropTypes.number.isRequired,
   dispatch: PropTypes.func.isRequired
 }
 
-export default connect(state => ({ id: state.todos.length }), null)(AddTodo)
+export default connect()(AddTodo)

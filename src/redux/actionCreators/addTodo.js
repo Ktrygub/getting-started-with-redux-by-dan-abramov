@@ -1,6 +1,8 @@
-const addTodo = (text, id) => ({
+import { v4 } from 'uuid'
+
+const addTodo = text => ({
   type: 'ADD_TODO',
-  id,
+  id: v4(),
   text
 })
 
