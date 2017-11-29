@@ -4,8 +4,8 @@ import FilterLink from './FilterLink'
 
 const Footer = () => (
   <p>
-    Show: <FilterLink filter="SHOW_ALL">all</FilterLink> <FilterLink filter="SHOW_ACTIVE">active</FilterLink>{' '}
-    <FilterLink filter="SHOW_COMPLETED">completed</FilterLink>
+    Show: <FilterLink filter="all">all</FilterLink> <FilterLink filter="active">active</FilterLink>{' '}
+    <FilterLink filter="completed">completed</FilterLink>
   </p>
 )
 
