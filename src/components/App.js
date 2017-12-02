@@ -7,10 +7,9 @@ import Footer from './Footer'
 const App = () => (
   <div>
     <AddTodo />
-    <VisibleTodoList  />
+    <VisibleTodoList />
     <Footer />
   </div>
 )
-
 
 export default App

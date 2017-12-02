@@ -1,5 +1,5 @@
 import { connect } from 'react-redux'
-import {withRouter} from 'react-router'
+import { withRouter } from 'react-router'
 
 import TodoList from './TodoList'
 import toggleTodo from '../redux/actionCreators/toggleTodo'
@@ -17,7 +17,7 @@ const getVisibleTodos = (todos, visibilityFilter) => {
   }
 }
 
-const mapStateToProps = (state, {match}) => ({
+const mapStateToProps = (state, { match }) => ({
   todos: getVisibleTodos(state.todos, match.params.filter || 'all')
 })
 
