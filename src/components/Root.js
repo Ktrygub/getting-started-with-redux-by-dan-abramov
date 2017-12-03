@@ -7,7 +7,7 @@ import App from './App'
 
 const Root = ({ store }) => (
   <Provider store={store}>
-    <BrowserRouter>
+    <BrowserRouter basename="/getting-started-with-redux-by-dan-abramov">
       <Route path="/:filter?" component={App} />
     </BrowserRouter>
   </Provider>
